@@ -66,6 +66,11 @@ config MACH_OMAP3EVM
 	bool "OMAP 3530 EVM board"
 	depends on ARCH_OMAP3 && ARCH_OMAP34XX
 
+config MACH_OMAP3BUG
+	bool "OMAP 3530 BUGBASE board"
+	select HAVE_PWM
+        depends on ARCH_OMAP3 && ARCH_OMAP34XX
+
 config MACH_OMAP3517EVM
 	bool "OMAP3517/ AM3517 EVM board"
 	depends on ARCH_OMAP3 && ARCH_OMAP34XX
