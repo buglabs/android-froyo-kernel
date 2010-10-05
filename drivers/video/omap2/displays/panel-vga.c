@@ -21,9 +21,9 @@
 #include <linux/delay.h>
 #include <plat/display.h>
 
-static struct omap_video_timings generic_panel_timings = {
-	/* 1280 x 1024 @ 57 Hz */
-        
+static struct omap_video_timings vga_panel_timings = {
+	/* 1280 x 1024 @ 57 Hz */        
+        /*
   	.x_res		= 1280,
   	.y_res		= 1024,
 	.pixel_clock	= 86400,
@@ -33,10 +33,11 @@ static struct omap_video_timings generic_panel_timings = {
 	.vfp		= 3,
 	.vbp		= 18,
 	.vsw		= 7,
-	
+	//Hsync polarity: +
+	//Vsync polarity: +
+	*/
 
-	/* 1024 x 768 @ 57 Hz */        
-	/*
+	/* 1024 x 768 */
   	.x_res		= 1024,
   	.y_res		= 768,
 	.pixel_clock	= 63500,
@@ -46,9 +47,11 @@ static struct omap_video_timings generic_panel_timings = {
 	.vfp		= 2,
 	.vbp		= 28,
 	.vsw		= 5,
-	*/
+	//Hsync polarity: -
+	//Vsync polarity: -
+
    	/* 800 x 600 */
-	/*
+        /*
   	.x_res		= 800,
   	.y_res		= 600,
 	.pixel_clock	= 40000,
@@ -61,34 +64,41 @@ static struct omap_video_timings generic_panel_timings = {
 	//Hsync polarity: +
 	//Vsync polarity: +
 	*/
-	
-	/* 640 x 480 @ 60 Hz  Reduced blanking VESA CVT 0.31M3-R */        
-	/*
+
+	/* 640 x 480 */        
+        /*
 	.x_res          = 640,
 	.y_res          = 480,
-	.pixel_clock	= 23500,
-	.hfp		= 48,
-	.hbp		= 80,
-	.hsw		= 32,
-	.vfp		= 3,
-	.vbp		= 7,
-	.vsw		= 4,
+	.pixel_clock	= 25170,
+	.hfp		= (16-1),
+	.hbp		= (48-1),
+	.hsw		= (96-1),
+	.vfp		= (10-1),
+	.vbp		= (33-1),
+	.vsw		= (2-1),
 	*/
 };
 
-static int generic_panel_probe(struct omap_dss_device *dssdev)
+static int vga_panel_probe(struct omap_dss_device *dssdev)
 {
+  //dssdev->panel.config =  OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS | 
+	                               OMAP_DSS_LCD_IHS | OMAP_DSS_LCD_IPC;
+	//dssdev->panel.acb = 32;
+	//dssdev->panel.acb = 48;
+	//dssdev->panel.recommended_bpp = 24;
+	//dssdev->panel.timings = vga_panel_timings;
 	dssdev->panel.config = OMAP_DSS_LCD_TFT;
-	dssdev->panel.timings = generic_panel_timings;
+	dssdev->panel.timings = vga_panel_timings;
 
 	return 0;
 }
 
-static void generic_panel_remove(struct omap_dss_device *dssdev)
+static void vga_panel_remove(struct omap_dss_device *dssdev)
 {
+
 }
 
-static int generic_panel_enable(struct omap_dss_device *dssdev)
+static int vga_panel_enable(struct omap_dss_device *dssdev)
 {
 	int r = 0;
 
@@ -98,48 +108,48 @@ static int generic_panel_enable(struct omap_dss_device *dssdev)
 	return r;
 }
 
-static void generic_panel_disable(struct omap_dss_device *dssdev)
+static void vga_panel_disable(struct omap_dss_device *dssdev)
 {
 	if (dssdev->platform_disable)
 		dssdev->platform_disable(dssdev);
 }
 
-static int generic_panel_suspend(struct omap_dss_device *dssdev)
+static int vga_panel_suspend(struct omap_dss_device *dssdev)
 {
-	generic_panel_disable(dssdev);
+	vga_panel_disable(dssdev);
 	return 0;
 }
 
-static int generic_panel_resume(struct omap_dss_device *dssdev)
+static int vga_panel_resume(struct omap_dss_device *dssdev)
 {
-	return generic_panel_enable(dssdev);
+	return vga_panel_enable(dssdev);
 }
 
-static struct omap_dss_driver generic_driver = {
-	.probe		= generic_panel_probe,
-	.remove		= generic_panel_remove,
+static struct omap_dss_driver vga_driver = {
+	.probe		= vga_panel_probe,
+	.remove		= vga_panel_remove,
 
-	.enable		= generic_panel_enable,
-	.disable	= generic_panel_disable,
-	.suspend	= generic_panel_suspend,
-	.resume		= generic_panel_resume,
+	.enable		= vga_panel_enable,
+	.disable	= vga_panel_disable,
+	.suspend	= vga_panel_suspend,
+	.resume		= vga_panel_resume,
 
 	.driver         = {
-		.name   = "generic_panel",
+		.name   = "vga_panel",
 		.owner  = THIS_MODULE,
 	},
 };
 
-static int __init generic_panel_drv_init(void)
+static int __init vga_panel_drv_init(void)
 {
-	return omap_dss_register_driver(&generic_driver);
+	return omap_dss_register_driver(&vga_driver);
 }
 
-static void __exit generic_panel_drv_exit(void)
+static void __exit vga_panel_drv_exit(void)
 {
-	omap_dss_unregister_driver(&generic_driver);
+	omap_dss_unregister_driver(&vga_driver);
 }
 
-module_init(generic_panel_drv_init);
-module_exit(generic_panel_drv_exit);
+module_init(vga_panel_drv_init);
+module_exit(vga_panel_drv_exit);
 MODULE_LICENSE("GPL");

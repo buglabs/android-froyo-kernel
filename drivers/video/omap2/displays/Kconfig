@@ -7,6 +7,13 @@ config PANEL_GENERIC
 	  Generic panel driver.
 	  Used for DVI output for Beagle and OMAP3 SDP.
 
+config PANEL_VGA
+        tristate "Generic VGA Panel"
+        depends on OMAP2_DSS
+        help
+	  Generic panel driver.
+	  Used for VGA output for Buglabs Video module.
+
 config PANEL_SAMSUNG_LTE430WQ_F0C
         tristate "Samsung LTE430WQ-F0C LCD Panel"
         depends on OMAP2_DSS
@@ -24,5 +31,23 @@ config PANEL_TAAL
         depends on OMAP2_DSS_DSI
         help
           Taal DSI command mode panel from TPO.
+
+config PANEL_SHARP_SPI_LCD
+        tristate "Sharp SPI LCD Panel"
+        default y
+        help
+          LCD Panel used in bugbase2 boards
+
+config TFP410
+       tristate "TFP410 I2C Support"
+       depends on I2C
+       help
+         TFP410 I2C support
+
+config THS8200
+       tristate "THS8200 I2C Support"
+       depends on I2C
+       help
+         THS8200 I2C support
 
 endmenu
