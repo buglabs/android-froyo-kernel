@@ -284,6 +284,13 @@ config APANIC_PLABEL
 	 If your platform uses a different flash partition label for storing
  	 crashdumps, enter it here.
 
+config BUG_DOCK
+	tristate "Bug Dock"
+	depends on I2C && SYSFS
+	help
+	  Say yes to enable omap3 bug to shut down and start up it's USB hub
+	  as it is needed by modules/dock. This should probably be built in.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
