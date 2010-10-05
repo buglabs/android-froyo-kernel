@@ -295,7 +295,7 @@ static struct android_usb_platform_data android_usb_pdata = {
 	.version = 0x0100,
 	.product_name = "BUGBase",
 	.manufacturer_name = "Buglabs",
-	.serial_number = "20090427",
+	.serial_number = device_serial,
 	.num_functions = ARRAY_SIZE(usb_functions_all),
 };
 
@@ -309,6 +309,15 @@ static struct platform_device androidusb_device = {
 
 static void bugbase_gadget_init(void)
 {
+	unsigned int val[2];
+	unsigned int reg;
+
+	reg = DIE_ID_REG_BASE + DIE_ID_REG_OFFSET;
+	val[0] = omap_readl(reg);
+	val[1] = omap_readl(reg + 4);
+
+	snprintf(device_serial, MAX_USB_SERIAL_NUM, "%08X%08X", val[1], val[0]);
+
 	platform_device_register(&androidusb_device);
 }
 
