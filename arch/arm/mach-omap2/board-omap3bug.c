@@ -232,6 +232,14 @@ static struct twl4030_usb_data omap3bug_usb_data = {
 	.usb_mode	= T2_USB_MODE_ULPI,
 };
 
+static struct twl4030_codec_audio_data omap3bug_audio_data = {
+	.audio_mclk = 26000000,
+};
+
+static struct twl4030_codec_data omap3bug_codec_data = {
+	.audio_mclk = 26000000,
+	.audio = &omap3bug_audio_data,
+};
 
 static struct twl4030_madc_platform_data omap3bug_madc_data = {
 	.irq_line	= 1,
@@ -1201,8 +1209,8 @@ static void __init omap3_bug_map_io(void)
 	omap2_map_common_io();
 }
 
-MACHINE_START(BUG, "OMAP3 BUG")
-//MACHINE_START(OMAP3EVM, "OMAP3 BUG")
+//MACHINE_START(BUG, "OMAP3 BUG")
+MACHINE_START(OMAP3EVM, "OMAP3 BUG")
 	/* Maintainer: Matt Isaacs - BugLabs, inc */
 	.phys_io	= 0x48000000,
 	.io_pg_offst	= ((0xd8000000) >> 18) & 0xfffc,
