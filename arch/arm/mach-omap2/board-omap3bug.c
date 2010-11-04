@@ -147,12 +147,16 @@ static struct platform_device omap3bug_nand_device = {
 	.resource	= &omap3bug_nand_resource,
 };
 
-static struct regulator_consumer_supply bug_vmmc1_supply = {
-	.supply			= "vmmc",
-};
-
-static struct regulator_consumer_supply bug_vmmc2_supply = {
-	.supply			= "vmmc",
+static struct regulator_consumer_supply bug_vmmc_supplies[] = {
+	{
+		.supply			= "vmmc",
+	},
+	{
+		.supply			= "vmmc",
+	},
+	{
+		.supply			= "vmmc",
+	},
 };
 
 static struct regulator_consumer_supply bug_vaux2_supply = {
@@ -162,6 +166,7 @@ static struct regulator_consumer_supply bug_vaux2_supply = {
 /* VMMC1 for MMC1 pins CMD, CLK, DAT0..DAT3 (20 mA, plus card == max 220 mA) */
 static struct regulator_init_data bug_vmmc1 = {
 	.constraints = {
+		.name			= "VMMC1",
 		.min_uV			= 1850000,
 		.max_uV			= 3150000,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
@@ -170,23 +175,8 @@ static struct regulator_init_data bug_vmmc1 = {
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
 	},
-	.num_consumer_supplies	= 1,
-	.consumer_supplies	= &bug_vmmc1_supply,
-};
-
-/* VMMC2 for MMC2 pins CMD, CLK, DAT0..DAT3 (max 100 mA) */
-static struct regulator_init_data bug_vmmc2 = {
-	.constraints = {
-		.min_uV			= 1850000,
-		.max_uV			= 3150000,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-					| REGULATOR_MODE_STANDBY,
-		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
-					| REGULATOR_CHANGE_MODE
-					| REGULATOR_CHANGE_STATUS,
-	},
-	.num_consumer_supplies	= 1,
-	.consumer_supplies	= &bug_vmmc2_supply,
+	.num_consumer_supplies	= ARRAY_SIZE(bug_vmmc_supplies),
+	.consumer_supplies	= bug_vmmc_supplies,
 };
 
 /* VAUX2 for USB PHY (max 100 mA) */
@@ -290,7 +280,6 @@ static struct twl4030_platform_data omap3bug_twldata = {
 	.usb		= &omap3bug_usb_data,
 	//.power	= GENERIC3430_T2SCRIPTS_DATA,
 	.vmmc1		= &bug_vmmc1,
-	.vmmc2		= &bug_vmmc2,
 	.vaux2		= &bug_vaux2,
 	.gpio		= &omap3bug_gpio_data,
 };
@@ -970,8 +959,11 @@ static int __init omap3bug_twl_gpio_setup(struct device *dev,
        /* gpio + 0 is "mmc0_cd" (input/IRQ) */
        mmc[0].gpio_cd = gpio + 0;
        twl4030_mmc_init(mmc);
-       bug_vmmc1_supply.dev = mmc[0].dev;
-       bug_vmmc2_supply.dev = mmc[1].dev;
+
+       bug_vmmc_supplies[0].dev = mmc[0].dev;
+       bug_vmmc_supplies[1].dev = mmc[1].dev;
+       bug_vmmc_supplies[2].dev = mmc[2].dev;
+
        /* Most GPIOs are for USB OTG.  Some are mostly sent to
         * the P2 connector; notably LEDA for the LCD backlight.
         */
