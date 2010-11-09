@@ -714,27 +714,53 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
 
 	lbs_deb_enter(LBS_DEB_SDIO);
 
+	/*
+	 * Disable interrupts
+	 */
+	sdio_claim_host(card->func);
+	sdio_writeb(card->func, 0x00, IF_SDIO_H_INT_MASK, &ret);
+	sdio_release_host(card->func);
+
 	sdio_claim_host(card->func);
 	scratch = if_sdio_read_scratch(card, &ret);
 	sdio_release_host(card->func);
 
+	lbs_deb_sdio("firmware status = %#x\n", scratch);
+	lbs_deb_sdio("scratch ret = %d\n", ret);
+
 	if (ret)
 		goto out;
 
-	lbs_deb_sdio("firmware status = %#x\n", scratch);
 
+	/*
+	 * The manual clearly describes that FEDC is the right code to use
+	 * to detect firmware presence, but for SD8686 it is not that simple.
+	 * Scratch is also used to store the RX packet length, so we lose
+	 * the FEDC value early on. So we use a non-zero check in order
+	 * to validate firmware presence.
+	 * Additionally, the SD8686 in the Gumstix always has the high scratch
+	 * bit set, even when the firmware is not loaded. So we have to
+	 * exclude that from the test.
+	 */
 	if (scratch == IF_SDIO_FIRMWARE_OK) {
 		lbs_deb_sdio("firmware already loaded\n");
+		goto success;
+	} else if ((card->model == IF_SDIO_MODEL_8686) && (scratch & 0x7fff)) {
+		lbs_deb_sdio("firmware may be running\n");
 		goto success;
 	}
 
 	ret = if_sdio_prog_helper(card);
 	if (ret)
 		goto out;
+	
+	lbs_deb_sdio("Helper firmware loaded\n");
 
 	ret = if_sdio_prog_real(card);
 	if (ret)
 		goto out;
+
+	lbs_deb_sdio("Firmware loaded\n");
 
 success:
 	sdio_claim_host(card->func);
@@ -999,8 +1025,6 @@ static int if_sdio_probe(struct sdio_func *func,
 	priv->card = card;
 	priv->hw_host_to_card = if_sdio_host_to_card;
 
-	priv->fw_ready = 1;
-
 	sdio_claim_host(func);
 
 	/*
@@ -1020,6 +1044,8 @@ static int if_sdio_probe(struct sdio_func *func,
 	sdio_release_host(func);
 	if (ret)
 		goto reclaim;
+
+	priv->fw_ready = 1;
 
 	/*
 	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
