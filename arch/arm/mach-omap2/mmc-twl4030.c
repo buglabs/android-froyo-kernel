@@ -91,7 +91,6 @@ static int twl_mmc_late_init(struct device *dev)
 	struct omap_mmc_platform_data *mmc = dev->platform_data;
 	int ret = 0;
 	int i;
-
 	/* MMC/SD/SDIO doesn't require a card detect switch */
 	if (gpio_is_valid(mmc->slots[0].switch_pin)) {
 		ret = gpio_request(mmc->slots[0].switch_pin, "mmc_cd");
@@ -106,10 +105,11 @@ static int twl_mmc_late_init(struct device *dev)
 	for (i = 0; i < ARRAY_SIZE(hsmmc); i++) {
 		if (hsmmc[i].name == mmc->slots[0].name) {
 			struct regulator *reg;
+			char reg_name[6];
 
 			hsmmc[i].mmc = mmc;
-
-			reg = regulator_get(dev, "vmmc");
+			sprintf(reg_name, "vmmc%d",i);
+			reg = regulator_get(dev, reg_name);
 			if (IS_ERR(reg)) {
 				dev_dbg(dev, "vmmc regulator missing\n");
 				/* HACK: until fixed.c regulator is usable,

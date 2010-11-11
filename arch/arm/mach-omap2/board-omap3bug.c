@@ -149,13 +149,7 @@ static struct platform_device omap3bug_nand_device = {
 
 static struct regulator_consumer_supply bug_vmmc_supplies[] = {
 	{
-		.supply			= "vmmc",
-	},
-	{
-		.supply			= "vmmc",
-	},
-	{
-		.supply			= "vmmc",
+		.supply			= "vmmc0",
 	},
 };
 
@@ -174,6 +168,7 @@ static struct regulator_init_data bug_vmmc1 = {
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.boot_on		= true,
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(bug_vmmc_supplies),
 	.consumer_supplies	= bug_vmmc_supplies,
@@ -182,6 +177,7 @@ static struct regulator_init_data bug_vmmc1 = {
 /* VAUX2 for USB PHY (max 100 mA) */
 static struct regulator_init_data bug_vaux2 = {
 	.constraints = {
+		.name			= "VAUX2",
 		.min_uV			= 1800000,
 		.max_uV			= 1800000,
 		.apply_uV		= true,
@@ -197,34 +193,78 @@ static struct regulator_init_data bug_vaux2 = {
 };
 
 /* Supply enable for digital video outputs */
-static struct regulator_consumer_supply bug_disp_supplies[] = {
-  {
-    .supply= "vdds_dsi",
-    .dev= &omap3_bug_dss_device.dev,
-  }
+static struct regulator_consumer_supply bug_1_8_supplies[] = {
+	{
+		.supply= "vdds_dsi",
+		.dev= &omap3_bug_dss_device.dev,
+	},
+	{
+		.supply = "vmmc2",
+	},
 };
 
-static struct regulator_init_data bug_disp_data = {
-  .constraints = {
-    .always_on = 1,
-  },
-  .num_consumer_supplies= ARRAY_SIZE(bug_disp_supplies),
-  .consumer_supplies= bug_disp_supplies,
-
+static struct regulator_init_data bug_fixed_1_8_data = {
+	.constraints = {
+		.min_uV			= 1800000,
+		.max_uV			= 1800000,
+		.apply_uV		= true,
+		.boot_on 		= true,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+			| REGULATOR_MODE_STANDBY,
+		.always_on 		= true,
+	},
+	.num_consumer_supplies= ARRAY_SIZE(bug_1_8_supplies),
+	.consumer_supplies= bug_1_8_supplies,
 };
 
-static struct fixed_voltage_config bug_disp_pwr_pdata = {
-	.supply_name   = "VLCD",
-	.microvolts    = 5000000,
-	.init_data     = &bug_disp_data,
+static struct fixed_voltage_config bug_fixed_1_8_pdata = {
+	.supply_name   = "V1.8",
+	.microvolts    = 1800000,
+	.init_data     = &bug_fixed_1_8_data,
 	.gpio          = -1,
 };
 
-static struct platform_device bug_disp_pwr = {
+static struct platform_device bug_fixed_1_8 = {
 	.name          = "reg-fixed-voltage",
 	.id            = -1,
 	.dev = {
-		.platform_data = &bug_disp_pwr_pdata,
+		.platform_data = &bug_fixed_1_8_pdata,
+	},
+};
+
+static struct regulator_consumer_supply bug_sd_supplies[] = {
+	{
+		.supply = "vmmc1",
+	},
+};
+
+static struct regulator_init_data bug_fixed_sd_data = {
+	.constraints = {
+		.min_uV			= 3300000,
+		.max_uV			= 3300000,
+		.apply_uV		= true,
+		.boot_on 		= true,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+			| REGULATOR_MODE_STANDBY,
+
+		.always_on 		= true,
+	},
+	.num_consumer_supplies= ARRAY_SIZE(bug_sd_supplies),
+	.consumer_supplies= bug_sd_supplies,
+};
+
+static struct fixed_voltage_config bug_fixed_sd_pdata = {
+	.supply_name   = "SD",
+	.microvolts    = 300000,
+	.init_data     = &bug_fixed_sd_data,
+	.gpio          = 35,
+};
+
+static struct platform_device bug_fixed_sd = {
+	.name          = "reg-fixed-voltage",
+	.id            = -1,
+	.dev = {
+		.platform_data = &bug_fixed_sd_pdata,
 	},
 };
 
@@ -914,7 +954,7 @@ static struct platform_device omap3_bug_pwm_gpt11 = {
 
 static struct platform_device *omap3_bug_devices[] __initdata = {
 
-  	&bug_disp_pwr,
+  	&bug_fixed_1_8,
 	&omap3_bug_dss_device,
 	&omap3bug_vout_device,
 	&omap3_bug_pwr_switch,
@@ -937,18 +977,18 @@ static struct twl4030_hsmmc_info mmc[] __initdata = {
 		.gpio_wp	= -EINVAL,
 	},
 	{
-	  .mmc = 2,
-	  .wires = 4,
-	  .gpio_cd	= 170,
-	  //.gpio_wp	= 63,
-	  .ocr_mask = MMC_VDD_32_33,
+		.mmc = 2,
+		.wires = 4,
+		.gpio_cd	= 170,
+		//.gpio_wp	= 63,
+		.ocr_mask = MMC_VDD_32_33,
 	},
 	{
-	  .mmc = 3,
-	  .wires = 1,
-	  .gpio_cd	= -EINVAL,
-	  .gpio_wp	= -EINVAL,
-	  .ocr_mask = MMC_VDD_165_195 | MMC_VDD_32_33,
+		.mmc = 3,
+		.wires = 1,
+		.gpio_cd	= -EINVAL,
+		.gpio_wp	= -EINVAL,
+		.ocr_mask = MMC_VDD_165_195 | MMC_VDD_32_33,
 	},
 	{}	/* Terminator */
 };
@@ -1117,12 +1157,13 @@ void gen_gpio_settings(void)
     return;
   }
   gpio_direction_output(109, 1);
-
+/*
   r =   gpio_request(35, "mmc1_enable");
   if (r) {
     printk(KERN_ERR "gen_gpio: failed to get mmc1_enable...\n");
     return;
   }
+*/  
   gpio_direction_output(35, 1);
 
   r =   gpio_request(108, "audio_mute");
