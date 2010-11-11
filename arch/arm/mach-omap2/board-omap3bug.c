@@ -502,7 +502,7 @@ static void __init omap3_bug_display_init(void)
 	r |= gpio_request(VIDEO_PIM_SW_ENABLE, "l
 cd_level_shifter");
 */
-	r |= gpio_request(90,  "lcd_shutdown");
+	r = gpio_request(90,  "lcd_shutdown");
 	r |= gpio_request(93,  "lcd_reset");
 	r |= gpio_request(10,  "dvi_reset");
 	r |= gpio_request(92,  "acc_reset");
@@ -955,6 +955,7 @@ static struct platform_device omap3_bug_pwm_gpt11 = {
 static struct platform_device *omap3_bug_devices[] __initdata = {
 
   	&bug_fixed_1_8,
+	&bug_fixed_sd,
 	&omap3_bug_dss_device,
 	&omap3bug_vout_device,
 	&omap3_bug_pwr_switch,
