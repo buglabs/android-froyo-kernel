@@ -226,7 +226,7 @@ static struct fixed_voltage_config bug_fixed_1_8_pdata = {
 
 static struct platform_device bug_fixed_1_8 = {
 	.name          = "reg-fixed-voltage",
-	.id            = -1,
+	.id            = 0,
 	.dev = {
 		.platform_data = &bug_fixed_1_8_pdata,
 	},
@@ -262,7 +262,7 @@ static struct fixed_voltage_config bug_fixed_sd_pdata = {
 
 static struct platform_device bug_fixed_sd = {
 	.name          = "reg-fixed-voltage",
-	.id            = -1,
+	.id            = 1,
 	.dev = {
 		.platform_data = &bug_fixed_sd_pdata,
 	},
@@ -1241,6 +1241,7 @@ static void __init omap3_bug_init(void)
 	spi_register_board_info(omap3bug_spi_board_info,
 				ARRAY_SIZE(omap3bug_spi_board_info));
 	omap_serial_init();
+	gpio_request(35, "mmc1_enable");
 	platform_add_devices(omap3_bug_devices, ARRAY_SIZE(omap3_bug_devices));
 	//omap_init_twl4030();
 	usb_gpio_settings();
