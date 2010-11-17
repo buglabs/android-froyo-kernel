@@ -21,6 +21,7 @@
 #include "assoc.h"
 #include "cmd.h"
 
+#define MAX_WX_STRING 80
 
 static inline void lbs_postpone_association_work(struct lbs_private *priv)
 {
@@ -2135,6 +2136,90 @@ static int lbs_set_wap(struct net_device *dev, struct iw_request_info *info,
 	return ret;
 }
 
+static int lbs_get_rssi(struct net_device *dev,	struct iw_request_info *info,
+			union iwreq_data *wrqu, char *extra)
+{
+	static int rssi = 0;
+	int error = 0;
+	char *p = extra;
+	static char ssidbuf[80 /*SSID_FMT_BUF_LEN*/];
+
+	rssi = 0;
+	ssidbuf[0] = '\0';
+
+	p += snprintf(p, MAX_WX_STRING, "%s rssi %d ", ssidbuf, rssi);
+	wrqu->data.length = p - extra + 1;
+
+	return error;
+}
+
+static int lbs_set_priv(struct net_device *dev, struct iw_request_info *info,
+			struct iw_point *dwrq, char *ext)
+{
+	int ret = 0;
+	char * extra;
+
+	if (!(extra = kmalloc(dwrq->length, GFP_KERNEL)))
+	    	return -ENOMEM;
+
+	if (copy_from_user(extra, dwrq->pointer, dwrq->length)) {
+	    	kfree(extra);
+	    	return -EFAULT;
+	}
+
+	lbs_deb_wext("%s: SIOCSIWPRIV request = %s\n", dev->name, extra);
+	
+	if (dwrq->length && extra) {
+		if (strnicmp(extra, "START", strlen("START")) == 0) {
+			lbs_deb_wext("%s, Received regular START command\n", __FUNCTION__);
+		}
+
+	    	if (strnicmp(extra, "SCAN-ACTIVE", strlen("SCAN-ACTIVE")) == 0) {
+			lbs_deb_wext("%s: active scan setting supppressed\n", dev->name);
+			ret = 0; 
+	    	}
+	    	else if (strnicmp(extra, "SCAN-PASSIVE", strlen("SCAN-PASSIVE")) == 0) {
+			lbs_deb_wext("%s: passive scan setting supppressed\n", dev->name);
+			ret = 0;
+	    	}
+	    	else if (strnicmp(extra, "RSSI", strlen("RSSI")) == 0) {
+			ret = lbs_get_rssi(dev, info, (union iwreq_data *)dwrq, extra);
+	    	}
+	    	else if (strnicmp(extra, "LINKSPEED", strlen("LINKSPEED")) == 0) {
+			ret = 0;
+		}
+	    	else if (strnicmp(extra, "MACADDR", strlen("MACADDR")) == 0) {
+			ret = 0; 
+		}
+	    	else if (strnicmp(extra, "COUNTRY", strlen("COUNTRY")) == 0) {
+			ret = 0; 
+		}
+	    	else if (strnicmp(extra, "STOP", strlen("STOP")) == 0) {
+			ret = 0; 
+		}
+	    	else if (strnicmp(extra, "POWERMODE", strlen("POWERMODE")) == 0) {
+			ret = 0; 
+		}
+	    	else {
+			snprintf(extra, MAX_WX_STRING, "OK");
+			dwrq->length = strlen("OK") + 1;
+			lbs_deb_wext("Unkown PRIVATE command , ignored\n");
+		}
+	}
+
+	if (extra) {
+	    	if (copy_to_user(dwrq->pointer, extra, dwrq->length)) {
+			kfree(extra);
+			return -EFAULT;
+	    	}
+
+	    	kfree(extra);
+	}
+
+	return ret;
+}
+
+
 /*
  * iwconfig settable callbacks
  */
@@ -2151,7 +2236,7 @@ static const iw_handler lbs_handler[] = {
 	(iw_handler) NULL,	/* SIOCGIWSENS */
 	(iw_handler) NULL,	/* SIOCSIWRANGE */
 	(iw_handler) lbs_get_range,	/* SIOCGIWRANGE */
-	(iw_handler) NULL,	/* SIOCSIWPRIV */
+	(iw_handler) lbs_set_priv,	/* SIOCSIWPRIV */
 	(iw_handler) NULL,	/* SIOCGIWPRIV */
 	(iw_handler) NULL,	/* SIOCSIWSTATS */
 	(iw_handler) NULL,	/* SIOCGIWSTATS */
@@ -2209,7 +2294,7 @@ static const iw_handler mesh_wlan_handler[] = {
 	(iw_handler) NULL,	/* SIOCGIWSENS */
 	(iw_handler) NULL,	/* SIOCSIWRANGE */
 	(iw_handler) lbs_get_range,	/* SIOCGIWRANGE */
-	(iw_handler) NULL,	/* SIOCSIWPRIV */
+	(iw_handler) lbs_set_priv,	/* SIOCSIWPRIV */
 	(iw_handler) NULL,	/* SIOCGIWPRIV */
 	(iw_handler) NULL,	/* SIOCSIWSTATS */
 	(iw_handler) NULL,	/* SIOCGIWSTATS */
