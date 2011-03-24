@@ -262,3 +262,10 @@ config BACKLIGHT_ADP5520
 	  To compile this driver as a module, choose M here: the module will
 	  be called adp5520_bl.
 
+config BACKLIGHT_BUGBASE2
+        tristate "BUGBASE2 LCD Backlight"
+        depends on BACKLIGHT_CLASS_DEVICE && MACH_OMAP3BUG
+        default y
+        help
+        This driver controls the LCD backlight of BUGBASE2
+
