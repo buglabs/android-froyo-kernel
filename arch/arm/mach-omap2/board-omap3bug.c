@@ -435,7 +435,7 @@ static struct i2c_board_info __initdata omap3bug_i2c2_boardinfo[] = {
 	  .platform_data = &omap3bug_ioexp_data,
 	},
 	{
-	  I2C_BOARD_INFO("bq27200", 0x55),
+	  I2C_BOARD_INFO("bq27500", 0x55),
 	},
 };
 
@@ -754,20 +754,6 @@ static void omap_init_bmi_slots(void)
   }
 }
 
-static struct resource omap3_bug_pwr_switch_resources[] = {
-  [0] = {
-    .start = TWL4030_PWR_IRQ_BASE,
-    .flags = IORESOURCE_IRQ,
-  },
-};
-
-static struct platform_device omap3_bug_pwr_switch = {
-  .name = "twl4030_pwrbutton",
-  .id = -1,
-  .num_resources = ARRAY_SIZE(omap3_bug_pwr_switch_resources),
-  .resource = omap3_bug_pwr_switch_resources,
-};
-
 static struct platform_device omap3_bug_pwm_a = {
   .name = "twl4030_pwm",
   .id = 0,
@@ -958,7 +944,6 @@ static struct platform_device *omap3_bug_devices[] __initdata = {
 	&bug_fixed_sd,
 	&omap3_bug_dss_device,
 	&omap3bug_vout_device,
-	&omap3_bug_pwr_switch,
 	&omap3_bug_pwm_a,
 	&omap3_bug_pwm_b,
 	&omap3_bug_pwm_gpt8,
