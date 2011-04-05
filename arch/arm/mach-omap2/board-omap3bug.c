@@ -764,6 +764,11 @@ static struct platform_device omap3_bug_pwm_b = {
   .id = 1,
 };
 
+static struct platform_device bugbase_ac_adptr = {
+	.name = "buglabs_ac",
+	.id = -1,
+};
+
 static void __init omap3_bug_init_irq(void)
 {
   omap2_init_common_hw(mt46h32m32lf6_sdrc_params, NULL);
@@ -951,7 +956,8 @@ static struct platform_device *omap3_bug_devices[] __initdata = {
 	&omap3_bug_pwm_gpt10,
 	&omap3_bug_pwm_gpt11,
 	&leds_pwm,
-	&leds_gpio
+	&leds_gpio,
+	&bugbase_ac_adptr
 };
 
 
@@ -1241,6 +1247,7 @@ static void __init omap3_bug_init(void)
 	/* Pin Mux - Set T8 to GPT9_PWM_EVT */
 	// For LED - should probably be moved into uboot
 	omap_cfg_reg(T8_34XX_GPIO55_OUT);
+	omap_cfg_reg(GPIO_43);
 
 }
 

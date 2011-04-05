@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.32.9
-# Wed Mar 30 11:54:37 2011
+# Tue Apr  5 17:52:09 2011
 #
 CONFIG_ARM=y
 CONFIG_HAVE_PWM=y
@@ -913,7 +913,7 @@ CONFIG_I2C_HELPER_AUTO=y
 
 #
 # I2C system bus drivers (mostly embedded / system-on-chip)
-# I2C system bus drivers (mostly embedded / system-on-chip)
+#
 #
 # CONFIG_I2C_DESIGNWARE is not set
 # CONFIG_I2C_GPIO is not set
@@ -1002,6 +1002,7 @@ CONFIG_GPIO_TWL4030=y
 CONFIG_POWER_SUPPLY=y
 # CONFIG_POWER_SUPPLY_DEBUG is not set
 # CONFIG_PDA_POWER is not set
+CONFIG_BUGLABS_AC=y
 # CONFIG_BATTERY_DS2760 is not set
 # CONFIG_BATTERY_DS2782 is not set
 CONFIG_BATTERY_BQ27x00=y
