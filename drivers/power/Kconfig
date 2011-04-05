@@ -43,6 +43,13 @@ config WM8350_POWER
           Say Y here to enable support for the power management unit
 	  provided by the Wolfson Microelectronics WM8350 PMIC.
 
+config BUGLABS_AC
+	tristate "Bug Labs AC support"
+	depends on MACH_OMAP3BUG
+	help
+	  Say Y here to enable support for AC plug-in notifications
+	  on Bug Labs base.
+
 config BATTERY_DS2760
 	tristate "DS2760 battery driver (HP iPAQ & others)"
 	select W1
