@@ -876,6 +876,8 @@ enum omap34xx_index {
 	DSS_D21,
 	DSS_D22,
 	DSS_D23,
+
+	GPIO_43
 };
 
 struct omap_mux_cfg {
