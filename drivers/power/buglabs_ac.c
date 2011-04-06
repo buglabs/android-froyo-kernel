@@ -22,7 +22,7 @@ static int buglabs_ac_get_property(struct power_supply *psy,
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_ONLINE:
-		val->intval = gpio_get_value(AC_GPIO) ? 0 : 1;
+		val->intval = gpio_get_value(AC_GPIO) ? 1 : 0;
 		break;
 	default:
 		ret = -EINVAL;
