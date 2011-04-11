@@ -116,6 +116,11 @@ static int acm_ctrl_msg(struct acm *acm, int request, int value,
 	return retval < 0 ? retval : 0;
 }
 
+/* TODO: move to cdc.h */
+#define USB_CDC_SET_COMM_FEATURE       0x02  // enorcar
+#define USB_CDC_GET_COMM_FEATURE       0x03  // enorcar
+#define USB_CDC_CLEAR_COMM_FEATURE       0x04  // enorcar
+
 /* devices aren't required to support these requests.
  * the cdc acm descriptor tells whether they do...
  */
@@ -125,6 +130,13 @@ static int acm_ctrl_msg(struct acm *acm, int request, int value,
 	acm_ctrl_msg(acm, USB_CDC_REQ_SET_LINE_CODING, 0, line, sizeof *(line))
 #define acm_send_break(acm, ms) \
 	acm_ctrl_msg(acm, USB_CDC_REQ_SEND_BREAK, ms, NULL, 0)
+//enorcar
+#define acm_set_comm_feature(acm, feature, state) \
+        acm_ctrl_msg(acm, USB_CDC_SET_COMM_FEATURE, feature, state, 2)
+#define acm_clear_comm_feature(acm, feature) \
+        acm_ctrl_msg(acm, USB_CDC_CLEAR_COMM_FEATURE, feature, NULL, 0)
+ 
+//#define SUPERSAFE
 
 /*
  * Write buffer management.
@@ -594,6 +606,12 @@ static int acm_tty_open(struct tty_struct *tty, struct file *filp)
 
 	if (0 > acm_set_control(acm, acm->ctrlout = ACM_CTRL_DTR | ACM_CTRL_RTS) &&
 	    (acm->ctrl_caps & USB_CDC_CAP_LINE))
+		goto full_bailout;
+
+	// enorcar
+	acm->state &= ~ACM_ABS_IDLE;
+	if (0 > acm_set_comm_feature(acm, ACM_ABSTRACT_STATE, &acm->state) &&
+	    (acm->ctrl_caps & USB_CDC_COMM_FEATURE))
 		goto full_bailout;
 
 	usb_autopm_put_interface(acm->control);
@@ -1296,9 +1314,13 @@ skip_countries:
 
 	acm_set_control(acm, acm->ctrlout);
 
-	acm->line.dwDTERate = cpu_to_le32(9600);
+	acm->line.dwDTERate = cpu_to_le32(115200);
 	acm->line.bDataBits = 8;
 	acm_set_line(acm, &acm->line);
+
+	/* enorcar */
+	acm->state |=  ACM_ABS_IDLE;
+	acm_set_comm_feature(acm, ACM_ABSTRACT_STATE, &acm->state);
 
 	usb_driver_claim_interface(&acm_driver, data_interface, acm);
 	usb_set_intfdata(data_interface, acm);
@@ -1592,7 +1614,7 @@ static int __init acm_init(void)
 	acm_tty_driver->subtype = SERIAL_TYPE_NORMAL,
 	acm_tty_driver->flags = TTY_DRIVER_REAL_RAW | TTY_DRIVER_DYNAMIC_DEV;
 	acm_tty_driver->init_termios = tty_std_termios;
-	acm_tty_driver->init_termios.c_cflag = B9600 | CS8 | CREAD |
+	acm_tty_driver->init_termios.c_cflag = B115200 | CS8 | CREAD |
 								HUPCL | CLOCAL;
 	tty_set_operations(acm_tty_driver, &acm_ops);
 

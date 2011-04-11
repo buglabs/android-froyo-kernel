@@ -48,6 +48,15 @@
 #define ACM_CTRL_OVERRUN	0x40
 
 /*
+ * Added enorcar Abstract state
+ */
+#define ACM_ABSTRACT_STATE	0x01
+#define ACM_ABS_IDLE		0x01
+#define ACM_ABS_MUX		0x02
+
+#define ACM_COUNTRY_SETTING	0x02
+
+/*
  * Internal driver structures.
  */
 
@@ -116,6 +125,7 @@ struct acm {
 	wait_queue_head_t drain_wait;			/* close processing */
 	struct tasklet_struct urb_task;                 /* rx processing */
 	spinlock_t throttle_lock;			/* synchronize throtteling and read callback */
+        unsigned int state;				/* enorcar: state for comm features */
 	unsigned int ctrlin;				/* input control lines (DCD, DSR, RI, break, overruns) */
 	unsigned int ctrlout;				/* output control lines (DTR, RTS) */
 	unsigned int writesize;				/* max packet size for the output bulk endpoint */
