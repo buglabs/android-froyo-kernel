@@ -424,7 +424,7 @@ out:
 	return err;
 }
 
-static void twl4030_power_off(void)
+void twl4030_power_off(void)
 {
 	int err;
 	u8 val;
@@ -483,8 +483,7 @@ void __init twl4030_power_init(struct twl4030_power_data *twl4030_scripts)
 
 		}
 	}
-	
-	pm_power_off = twl4030_power_off;
+
 	err = twl4030_i2c_write_u8(TWL4030_MODULE_PM_MASTER, 0, R_PROTECT_KEY);
 	if (err)
 		pr_err("TWL4030 Unable to relock registers\n");

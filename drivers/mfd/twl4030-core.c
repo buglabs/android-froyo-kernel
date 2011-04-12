@@ -32,6 +32,7 @@
 #include <linux/platform_device.h>
 #include <linux/clk.h>
 #include <linux/err.h>
+#include <linux/pm.h>
 
 #include <linux/regulator/machine.h>
 
@@ -827,6 +828,9 @@ twl4030_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	/* load power event scripts */
 	if (twl_has_power() && pdata->power)
 		twl4030_power_init(pdata->power);
+
+	if (twl_has_power())
+		pm_power_off = twl4030_power_off;
 
 	/* Maybe init the T2 Interrupt subsystem */
 	if (client->irq

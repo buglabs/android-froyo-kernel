@@ -499,4 +499,6 @@ int twl4030_sih_setup(int module);
 #define TWL4030_REG_VUSB1V8	18
 #define TWL4030_REG_VUSB3V1	19
 
+void twl4030_power_off(void);
+
 #endif /* End of __TWL4030_H */
