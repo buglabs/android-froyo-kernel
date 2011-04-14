@@ -8,6 +8,12 @@
 #include <linux/slab.h>
 
 #define AC_GPIO  43
+#define CHRG_GPIO  164
+
+struct buglabs_ac {
+	struct power_supply *sply;
+	struct delayed_work work;
+};
 
 static enum power_supply_property buglabs_ac_props[] =
 {
@@ -22,7 +28,7 @@ static int buglabs_ac_get_property(struct power_supply *psy,
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_ONLINE:
-		val->intval = gpio_get_value(AC_GPIO) ? 1 : 0;
+		val->intval = gpio_get_value(AC_GPIO) ? 0 : 1;
 		break;
 	default:
 		ret = -EINVAL;
@@ -34,51 +40,73 @@ static int buglabs_ac_get_property(struct power_supply *psy,
 
 static irqreturn_t buglabs_ac_irq_hdlr(int irq, void *data)
 {
-	struct power_supply *sply = data;
+	struct buglabs_ac *ac = data;
 
-	power_supply_changed(sply);
+	schedule_delayed_work(&ac->work, msecs_to_jiffies(1500));
 	return(IRQ_HANDLED);
+}
+
+static void buglabs_ac_work(struct work_struct *work)
+{
+	struct buglabs_ac *ac =
+		container_of(to_delayed_work(work), struct buglabs_ac, work);
+
+	power_supply_changed(ac->sply);
 }
 
 static int buglabs_ac_probe(struct platform_device *pdev)
 {
 	int ret = 0;
+	struct buglabs_ac *bl_ac;
 	struct power_supply *sply;
 
 	printk(KERN_INFO "Bug Labs AC Supply probe.\n");
 	sply = kzalloc(sizeof(struct power_supply), GFP_KERNEL);
 	if (sply == NULL)
 		return(-ENOMEM);
-	
+	bl_ac = kzalloc(sizeof(struct buglabs_ac), GFP_KERNEL);
+	if (bl_ac == NULL)
+		return(-ENOMEM);
+
 	ret = gpio_request(AC_GPIO, "bug_ac");
 	if (ret)
 		printk(KERN_ERR "%s: Problem requesting GPIO...\n",__FUNCTION__);
+	ret = gpio_request(CHRG_GPIO, "bug_ac");
+	if (ret)
+		printk(KERN_ERR "%s: Problem requesting GPIO...\n",__FUNCTION__);
+
 	ret = gpio_direction_input(AC_GPIO);
+	ret = gpio_direction_input(CHRG_GPIO);
 	sply->type = POWER_SUPPLY_TYPE_MAINS;
 	sply->name = "ac";
 	sply->properties = buglabs_ac_props;
 	sply->num_properties = ARRAY_SIZE(buglabs_ac_props);
 	sply->get_property = buglabs_ac_get_property;
-	
+
 	ret = power_supply_register(&pdev->dev, sply);
 	if (ret)
 		dev_err(&pdev->dev, "Couldnt register supply.\n");
+	bl_ac->sply = sply;
+	INIT_DELAYED_WORK(&bl_ac->work, buglabs_ac_work);
 
 	ret = request_irq(gpio_to_irq(AC_GPIO), buglabs_ac_irq_hdlr,
-		IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "buglabs_ac", sply);
-	platform_set_drvdata(pdev, sply);
+		IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "buglabs_ac", bl_ac);
+	ret = request_irq(gpio_to_irq(CHRG_GPIO), buglabs_ac_irq_hdlr,
+		IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "buglabs_chrg", bl_ac);
+	platform_set_drvdata(pdev, bl_ac);
 	return(0);
 }
 
 static int buglabs_ac_remove(struct platform_device *pdev)
 {
-	struct power_supply *sply;
+	struct buglabs_ac *ac;
 
-	sply = platform_get_drvdata(pdev);
-	
-	power_supply_unregister(sply);
-	kfree(sply);
+	ac = platform_get_drvdata(pdev);
 
+	cancel_delayed_work_sync(&ac->work);
+	power_supply_unregister(ac->sply);
+	kfree(ac->sply);
+	kfree(ac);
 	return(0);
 }
 
