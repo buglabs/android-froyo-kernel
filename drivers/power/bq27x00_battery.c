@@ -18,6 +18,7 @@
 #include <linux/module.h>
 #include <linux/param.h>
 #include <linux/jiffies.h>
+#include <linux/kthread.h>
 #include <linux/workqueue.h>
 #include <linux/delay.h>
 #include <linux/platform_device.h>
@@ -66,6 +67,7 @@ struct bq27x00_device_info {
 	enum bq27x00_chip	chip;
 
 	struct i2c_client	*client;
+	struct task_struct	*service;
 };
 
 static enum power_supply_property bq27x00_battery_props[] = {
@@ -83,6 +85,22 @@ static enum power_supply_property bq27x00_battery_props[] = {
 /*
  * Common code for BQ27x00 devices
  */
+
+static int bq27x00_service(void *data)
+{
+	struct bq27x00_device_info *di = data;
+
+	while (!kthread_should_stop())
+	{
+		power_supply_changed(&di->bat);
+		set_current_state(TASK_INTERRUPTIBLE);
+		if (!kthread_should_stop())
+			schedule_timeout(HZ*60);
+		set_current_state(TASK_RUNNING);
+	}
+
+	return(0);
+}
 
 static int bq27x00_read(u8 reg, int *rt_value, int b_single,
 			struct bq27x00_device_info *di)
@@ -394,6 +412,7 @@ static int bq27x00_battery_probe(struct i2c_client *client,
 		goto batt_failed_4;
 	}
 
+	di->service = kthread_run(bq27x00_service, di, "kpowerd");
 	dev_info(&client->dev, "support ver. %s enabled\n", DRIVER_VERSION);
 
 	return 0;
@@ -415,6 +434,8 @@ batt_failed_1:
 static int bq27x00_battery_remove(struct i2c_client *client)
 {
 	struct bq27x00_device_info *di = i2c_get_clientdata(client);
+
+	kthread_stop(di->service);
 
 	power_supply_unregister(&di->bat);
 
