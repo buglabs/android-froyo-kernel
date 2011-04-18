@@ -75,3 +75,6 @@ GTAGS
 *.orig
 *~
 \#*#
+
+# eclipse project file
+.project
