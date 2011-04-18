@@ -41,12 +41,12 @@
 /**
  * Maximum intensity supported by the panel
  */
-#define OMAPBL_MAX_INTENSITY   100
+#define OMAPBL_MAX_INTENSITY   255
 
 /**
  * Default intensity after boot-up
  */
-#define OMAPBL_DEF_INTENSITY   70
+#define OMAPBL_DEF_INTENSITY   170
 
 /**
  * Flag indicating the driver status - suspended / running
@@ -97,8 +97,8 @@ static int omapbl_set_intensity(struct backlight_device *bd)
                intensity = 0;
        if (intensity == 0)
 	       printk("Backlight turned off\n");
-       
-       c = ((125 * intensity) / 100) + 2;
+       c = ((25 * intensity) / 100) + 63;
+       printk(KERN_INFO "%s: setting PWMOFF to %d\n", __FUNCTION__, c);
 
 #if 0
 	   if (intensity > 100)
@@ -112,8 +112,8 @@ static int omapbl_set_intensity(struct backlight_device *bd)
        /*
 	* Program the OFF register of PWM1 with user values
 	*/
+       ret = twl4030_i2c_write_u8(TWL4030_MODULE_PWM1, (127 - c), TWL_PWM1_PWM1ON);
        ret = twl4030_i2c_write_u8(TWL4030_MODULE_PWM1, c, TWL_PWM1_PWM1OFF);
-       
        if (ret) {
 	       printk("i2c write failed\n");
 	       return ret;
