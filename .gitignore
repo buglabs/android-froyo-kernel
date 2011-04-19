@@ -75,3 +75,8 @@ GTAGS
 *.orig
 *~
 \#*#
+
+# eclipse project file
+.project
+
+arch/microblaze/boot/dts/system.dts
