@@ -698,9 +698,10 @@ int bmi_vh_probe(struct bmi_device *bdev)
 	vh->vh_spi_info.chip_select = bdev->slot->spi_cs;
 	vh->vh_spi_info.mode = mode;
 
-	vh->spi = spi_new_device(spi_busnum_to_master(vh->vh_spi_info.bus_num), &vh->vh_spi_info) ;
-	if (!vh->spi)
-	  printk(KERN_WARNING "VH: spi_new_device failed\n");
+   //TODO - Figure out why we are kernel panicing on the following line (http://pastebin.com/EyLX4VEp):
+	//vh->spi = spi_new_device(spi_busnum_to_master(vh->vh_spi_info.bus_num), &vh->vh_spi_info) ;
+	//if (!vh->spi)
+	//  printk(KERN_WARNING "VH: spi_new_device failed\n");
 
 	bmi_device_set_drvdata (bdev, vh);
 	// configure IOX
@@ -841,7 +842,8 @@ int bmi_vh_probe(struct bmi_device *bdev)
 	i2c_unregister_device(vh->rdac);
 	i2c_unregister_device(vh->adc);
 	i2c_unregister_device(vh->dac);
-	spi_unregister_device(vh->spi);
+   //TODO - Add this back in when SPI works in android
+	//spi_unregister_device(vh->spi);
 	return -ENODEV;
 }
 
@@ -862,7 +864,8 @@ void bmi_vh_remove(struct bmi_device *bdev)
 	i2c_unregister_device(vh->rdac);
 	i2c_unregister_device(vh->adc);
 	i2c_unregister_device(vh->dac);
-	spi_unregister_device(vh->spi);
+   //TODO - Add this back in when SPI works in android
+	//spi_unregister_device(vh->spi);
 
 	// remove usb dependency
 	decrement_usb_dep();
@@ -907,7 +910,8 @@ int bmi_vh_resume(struct device *dev)
 
 	printk(KERN_INFO "bmi_vh: Resume..\n");
 	bmi_slot_uart_enable(bmi_dev->slot->slotnum);
-	bmi_slot_spi_enable(bmi_dev->slot->slotnum);
+   //TODO - Add this back in when SPI works in android
+	//bmi_slot_spi_enable(bmi_dev->slot->slotnum);
 	return 0;
 }
 
@@ -919,7 +923,8 @@ int bmi_vh_suspend(struct device *dev)
 
 	printk(KERN_INFO "bmi_vh: Suspend..\n");
 	bmi_slot_uart_disable(bmi_dev->slot->slotnum);
-	bmi_slot_spi_disable(bmi_dev->slot->slotnum);
+   //TODO - Add this back in when SPI works in android
+	//bmi_slot_spi_disable(bmi_dev->slot->slotnum);
 	return 0;
 }
 
