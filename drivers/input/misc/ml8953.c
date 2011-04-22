@@ -184,8 +184,8 @@ static void ml8953_work(struct work_struct *work)
 	// report orientation
 	
 	//printk(KERN_DEBUG "ml8953_work: 0x%x\n", (pitch << 16) | roll);
-	//input_report_abs(ac->input, ABS_MISC, (pitch << 16) | roll);
-	//input_sync(ac->input);
+	input_report_abs(ac->input, ABS_MISC, (pitch << 16) | roll);
+	input_sync(ac->input);
 
 	input_report_abs(ac->input, ABS_X, gx);
 	input_sync(ac->input);
