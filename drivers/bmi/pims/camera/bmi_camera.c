@@ -47,6 +47,7 @@
 #include <linux/i2c.h>
 #include <linux/version.h>
 #include <linux/kernel.h>
+#include <linux/v4l2-subdev.h>
 #include <linux/v4l2-mediabus.h>
 
 #include <media/v4l2-chip-ident.h>
@@ -56,7 +57,8 @@
 #include "bmi_camera.h"
 #include <linux/bmi/bmi_camera.h>
 
-extern struct platform_device omap3isp_device;
+#include "../../../arch/arm/mach-omap2/devices.h"
+//extern struct platform_device omap3isp_device;
 static int major;		// control device major
 
 
@@ -300,6 +302,7 @@ int bmi_register_camera(struct bmi_device *bdev,
 		printk (KERN_ERR "Unable to create "                  
 		       "class_device for bmi_cam%i; errno = %ld\n",
 		       slotnum, PTR_ERR(pdat->class_dev));             
+		pdat->class_dev = NULL;
 		cdev_del (&pdat->cdev);
 		ret = -ENODEV;
 		goto err;
@@ -332,6 +335,7 @@ int bmi_unregister_camera(struct bmi_device *bdev)
 			device_destroy (bmi_class, MKDEV(major, slotnum));
 			fops = pdat->cdev.ops;
 			cdev_del (&pdat->cdev);
+			bmi_device_set_drvdata (bdev, 0);
 			kfree(fops);
 			kfree(pdat->pdev);
 			kfree(pdat);
@@ -836,7 +840,7 @@ static struct platform_driver bmi_camera_platform_driver = {
 };
 
 static __init int bmi_camera_init(void)
-{	
+{
 	dev_t	dev_id;
 	int ret, i;
 	// initialize slot selection code
@@ -929,9 +933,8 @@ static void __exit bmi_camera_cleanup(void)
 	gpio_free(CAM_LOCKB);
 
 	platform_device_unregister(&omap3isp_device);
+	platform_driver_unregister(&bmi_camera_platform_driver);
 	i2c_del_driver(&bmi_camera_i2c_driver);
-
-
 }
 
 module_init(bmi_camera_init);
